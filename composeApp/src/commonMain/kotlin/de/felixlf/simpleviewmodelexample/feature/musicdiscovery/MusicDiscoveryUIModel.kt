@@ -16,7 +16,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -38,36 +39,24 @@ class MusicDiscoveryUIModel(
     // flatMapLatest #1: genre → artists
     private val artists: StateFlow<ImmutableList<Artist>> = selectedGenre
         .flatMapLatest { genre ->
-            flow {
-                emit(persistentListOf())
-                if (genre != null) {
-                    emit(repository.getArtistsForGenre(genre.id).toImmutableList())
-                }
-            }
+            if (genre != null) repository.getArtistsForGenre(genre.id).map { it.toImmutableList() }
+            else flowOf(persistentListOf())
         }
         .stateIn(scope, sharingStarted, persistentListOf())
 
     // flatMapLatest #2: artist → albums
     private val albums: StateFlow<ImmutableList<Album>> = selectedArtist
         .flatMapLatest { artist ->
-            flow {
-                emit(persistentListOf())
-                if (artist != null) {
-                    emit(repository.getAlbumsForArtist(artist.id).toImmutableList())
-                }
-            }
+            if (artist != null) repository.getAlbumsForArtist(artist.id).map { it.toImmutableList() }
+            else flowOf(persistentListOf())
         }
         .stateIn(scope, sharingStarted, persistentListOf())
 
     // flatMapLatest #3: album → tracks
     private val tracks: StateFlow<ImmutableList<Track>> = selectedAlbum
         .flatMapLatest { album ->
-            flow {
-                emit(persistentListOf())
-                if (album != null) {
-                    emit(repository.getTracksForAlbum(album.id).toImmutableList())
-                }
-            }
+            if (album != null) repository.getTracksForAlbum(album.id).map { it.toImmutableList() }
+            else flowOf(persistentListOf())
         }
         .stateIn(scope, sharingStarted, persistentListOf())
 

@@ -1,6 +1,8 @@
 package de.felixlf.simpleviewmodelexample.domain
 
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 class MusicRepository {
 
@@ -88,18 +90,18 @@ class MusicRepository {
 
     fun getGenres(): List<Genre> = genres
 
-    suspend fun getArtistsForGenre(genreId: String): List<Artist> {
+    fun getArtistsForGenre(genreId: String): Flow<List<Artist>> = flow {
         delay(300)
-        return artists.filter { it.genreId == genreId }
+        emit(artists.filter { it.genreId == genreId })
     }
 
-    suspend fun getAlbumsForArtist(artistId: String): List<Album> {
+    fun getAlbumsForArtist(artistId: String): Flow<List<Album>> = flow {
         delay(300)
-        return albums.filter { it.artistId == artistId }
+        emit(albums.filter { it.artistId == artistId })
     }
 
-    suspend fun getTracksForAlbum(albumId: String): List<Track> {
+    fun getTracksForAlbum(albumId: String): Flow<List<Track>> = flow {
         delay(200)
-        return tracks[albumId].orEmpty()
+        emit(tracks[albumId].orEmpty())
     }
 }
