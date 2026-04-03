@@ -1,11 +1,12 @@
 package de.felixlf.simpleviewmodelexample.di
 
+import de.felixlf.simpleviewmodelexample.uimodel.UIDispatcher
+import de.felixlf.simpleviewmodelexample.uimodel.UIStateSharing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import org.koin.dsl.module
-import kotlin.coroutines.CoroutineContext
 
 actual val platformModule = module {
-    single<CoroutineContext> { Dispatchers.Main.immediate }
-    single<SharingStarted> { SharingStarted.WhileSubscribed(5_000) }
+    single { UIDispatcher(Dispatchers.Main.immediate) }
+    single { UIStateSharing(SharingStarted.WhileSubscribed(5_000)) }
 }

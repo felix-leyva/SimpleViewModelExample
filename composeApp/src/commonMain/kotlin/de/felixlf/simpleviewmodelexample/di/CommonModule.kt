@@ -7,13 +7,13 @@ import de.felixlf.simpleviewmodelexample.domain.usecases.GetGenresUseCase
 import de.felixlf.simpleviewmodelexample.domain.usecases.GetTracksForAlbumUseCase
 import de.felixlf.simpleviewmodelexample.feature.musicdiscovery.MusicDiscoveryUIModel
 import de.felixlf.simpleviewmodelexample.feature.musicdiscovery.MusicDiscoveryViewModel
+import de.felixlf.simpleviewmodelexample.uimodel.UIDispatcher
+import de.felixlf.simpleviewmodelexample.uimodel.UIStateSharing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.SharingStarted
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
-import kotlin.coroutines.CoroutineContext
 
 val commonModule = module {
     singleOf(::MusicRepository)
@@ -26,8 +26,8 @@ val commonModule = module {
 
     factory {
         MusicDiscoveryUIModel(
-            scope = CoroutineScope(get<CoroutineContext>() + SupervisorJob()),
-            sharingStarted = get<SharingStarted>(),
+            scope = CoroutineScope(get<UIDispatcher>().context + SupervisorJob()),
+            sharingStarted = get<UIStateSharing>().started,
             getGenres = get(),
             getArtistsForGenre = get(),
             getAlbumsForArtist = get(),
