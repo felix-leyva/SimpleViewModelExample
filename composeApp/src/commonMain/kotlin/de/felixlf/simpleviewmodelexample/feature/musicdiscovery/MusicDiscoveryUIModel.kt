@@ -14,7 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
+import de.felixlf.simpleviewmodelexample.uimodel.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -37,28 +37,29 @@ class MusicDiscoveryUIModel(
     // --- Derived flows: each depends on the previous selection ---
 
     // flatMapLatest #1: genre → artists
-    private val artists: StateFlow<ImmutableList<Artist>> = selectedGenre
-        .flatMapLatest { genre ->
-            if (genre != null) repository.getArtistsForGenre(genre.id).map { it.toImmutableList() }
-            else flowOf(persistentListOf())
+    private val artists = selectedGenre.flatMapLatest { genre ->
+        when {
+            genre != null -> repository.getArtistsForGenre(genre.id).map { it.toImmutableList() }
+            else -> flowOf(persistentListOf())
         }
-        .stateIn(scope, sharingStarted, persistentListOf())
+    }
 
     // flatMapLatest #2: artist → albums
-    private val albums: StateFlow<ImmutableList<Album>> = selectedArtist
-        .flatMapLatest { artist ->
-            if (artist != null) repository.getAlbumsForArtist(artist.id).map { it.toImmutableList() }
-            else flowOf(persistentListOf())
+    private val albums = selectedArtist.flatMapLatest { artist ->
+        when {
+            artist != null -> repository.getAlbumsForArtist(artist.id).map { it.toImmutableList() }
+            else -> flowOf(persistentListOf())
         }
-        .stateIn(scope, sharingStarted, persistentListOf())
+    }
+
 
     // flatMapLatest #3: album → tracks
-    private val tracks: StateFlow<ImmutableList<Track>> = selectedAlbum
-        .flatMapLatest { album ->
-            if (album != null) repository.getTracksForAlbum(album.id).map { it.toImmutableList() }
-            else flowOf(persistentListOf())
+    private val tracks = selectedAlbum.flatMapLatest { album ->
+        when {
+            album != null -> repository.getTracksForAlbum(album.id).map { it.toImmutableList() }
+            else -> flowOf(persistentListOf())
         }
-        .stateIn(scope, sharingStarted, persistentListOf())
+    }
 
     // --- Public state: combine wires everything together ---
     override val uiState: StateFlow<MusicDiscoveryUIState> = combine(
@@ -68,16 +69,15 @@ class MusicDiscoveryUIModel(
         albums,
         selectedAlbum,
         tracks,
-    ) { values ->
-        @Suppress("UNCHECKED_CAST")
+    ) { selectedGenre, artists, selectedArtist, albums, selectedAlbum, tracks ->
         MusicDiscoveryUIState(
             genres = genres,
-            selectedGenre = values[0] as Genre?,
-            artists = values[1] as ImmutableList<Artist>,
-            selectedArtist = values[2] as Artist?,
-            albums = values[3] as ImmutableList<Album>,
-            selectedAlbum = values[4] as Album?,
-            tracks = values[5] as ImmutableList<Track>,
+            selectedGenre = selectedGenre,
+            artists = artists,
+            selectedArtist = selectedArtist,
+            albums = albums,
+            selectedAlbum = selectedAlbum,
+            tracks = tracks,
         )
     }.stateIn(scope, sharingStarted, MusicDiscoveryUIState.Default.copy(genres = genres))
 
