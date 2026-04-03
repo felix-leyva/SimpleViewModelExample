@@ -28,7 +28,7 @@ val commonModule = module {
         MusicDiscoveryUIModel(
             scope = CoroutineScope(get<CoroutineContext>() + SupervisorJob()),
             sharingStarted = get<SharingStarted>(),
-            getGenresUseCase = get(),
+            getGenres = get(),
             getArtistsForGenre = get(),
             getAlbumsForArtist = get(),
             getTracksForAlbum = get(),

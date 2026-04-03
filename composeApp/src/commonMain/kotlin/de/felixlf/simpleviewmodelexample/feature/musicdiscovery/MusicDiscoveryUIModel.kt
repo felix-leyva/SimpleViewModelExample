@@ -23,13 +23,13 @@ import kotlinx.coroutines.flow.stateIn
 class MusicDiscoveryUIModel(
     override val scope: CoroutineScope,
     sharingStarted: SharingStarted,
-    getGenresUseCase: GetGenresUseCase,
+    getGenres: GetGenresUseCase,
     private val getArtistsForGenre: GetArtistsForGenreUseCase,
     private val getAlbumsForArtist: GetAlbumsForArtistUseCase,
     private val getTracksForAlbum: GetTracksForAlbumUseCase,
 ) : UIModel<MusicDiscoveryUIState, MusicDiscoveryCommand> {
 
-    private val genres = getGenresUseCase()
+    private val genres = getGenres()
 
     // --- Internal mutable state (user selections) ---
     private val selectedGenre = MutableStateFlow<Genre?>(null)
@@ -64,23 +64,15 @@ class MusicDiscoveryUIModel(
 
     // --- Public state: combine wires everything together ---
     override val uiState: StateFlow<MusicDiscoveryUIState> = combine(
+        genres,
         selectedGenre,
         artists,
         selectedArtist,
         albums,
         selectedAlbum,
         tracks,
-    ) { selectedGenre, artists, selectedArtist, albums, selectedAlbum, tracks ->
-        MusicDiscoveryUIState(
-            genres = genres,
-            selectedGenre = selectedGenre,
-            artists = artists,
-            selectedArtist = selectedArtist,
-            albums = albums,
-            selectedAlbum = selectedAlbum,
-            tracks = tracks,
-        )
-    }.stateIn(scope, sharingStarted, MusicDiscoveryUIState.Default)
+        ::MusicDiscoveryUIState
+    ).stateIn(scope, sharingStarted, MusicDiscoveryUIState.Default)
 
     // --- Commands: update selections, reset downstream when parent changes ---
     override fun sendCommand(command: MusicDiscoveryCommand) {

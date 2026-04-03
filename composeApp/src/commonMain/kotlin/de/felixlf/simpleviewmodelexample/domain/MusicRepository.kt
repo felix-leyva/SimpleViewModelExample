@@ -91,7 +91,9 @@ class MusicRepository {
         ),
     )
 
-    fun getGenres(): ImmutableList<Genre> = genres.toImmutableList()
+    fun getGenres(): Flow<ImmutableList<Genre>> = flow {
+        emit(genres.toImmutableList())
+    }
 
     fun getArtistsForGenre(genreId: String): Flow<ImmutableList<Artist>> = flow {
         delay(300)
