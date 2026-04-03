@@ -4,8 +4,8 @@ import de.felixlf.simpleviewmodelexample.domain.Album
 import de.felixlf.simpleviewmodelexample.domain.Artist
 import de.felixlf.simpleviewmodelexample.domain.Genre
 import de.felixlf.simpleviewmodelexample.domain.MusicRepository
-import de.felixlf.simpleviewmodelexample.domain.Track
 import de.felixlf.simpleviewmodelexample.uimodel.UIModel
+import de.felixlf.simpleviewmodelexample.uimodel.combine
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -14,10 +14,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import de.felixlf.simpleviewmodelexample.uimodel.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -39,7 +37,7 @@ class MusicDiscoveryUIModel(
     // flatMapLatest #1: genre → artists
     private val artists = selectedGenre.flatMapLatest { genre ->
         when {
-            genre != null -> repository.getArtistsForGenre(genre.id).map { it.toImmutableList() }
+            genre != null -> repository.getArtistsForGenre(genre.id)
             else -> flowOf(persistentListOf())
         }
     }
@@ -47,16 +45,15 @@ class MusicDiscoveryUIModel(
     // flatMapLatest #2: artist → albums
     private val albums = selectedArtist.flatMapLatest { artist ->
         when {
-            artist != null -> repository.getAlbumsForArtist(artist.id).map { it.toImmutableList() }
+            artist != null -> repository.getAlbumsForArtist(artist.id)
             else -> flowOf(persistentListOf())
         }
     }
 
-
     // flatMapLatest #3: album → tracks
     private val tracks = selectedAlbum.flatMapLatest { album ->
         when {
-            album != null -> repository.getTracksForAlbum(album.id).map { it.toImmutableList() }
+            album != null -> repository.getTracksForAlbum(album.id)
             else -> flowOf(persistentListOf())
         }
     }
@@ -79,7 +76,7 @@ class MusicDiscoveryUIModel(
             selectedAlbum = selectedAlbum,
             tracks = tracks,
         )
-    }.stateIn(scope, sharingStarted, MusicDiscoveryUIState.Default.copy(genres = genres))
+    }.stateIn(scope, sharingStarted, MusicDiscoveryUIState.Default)
 
     // --- Commands: update selections, reset downstream when parent changes ---
     override fun sendCommand(command: MusicDiscoveryCommand) {

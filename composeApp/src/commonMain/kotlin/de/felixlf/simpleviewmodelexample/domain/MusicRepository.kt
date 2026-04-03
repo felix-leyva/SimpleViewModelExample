@@ -1,5 +1,8 @@
 package de.felixlf.simpleviewmodelexample.domain
 
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -88,20 +91,20 @@ class MusicRepository {
         ),
     )
 
-    fun getGenres(): List<Genre> = genres
+    fun getGenres(): ImmutableList<Genre> = genres.toImmutableList()
 
-    fun getArtistsForGenre(genreId: String): Flow<List<Artist>> = flow {
+    fun getArtistsForGenre(genreId: String): Flow<ImmutableList<Artist>> = flow {
         delay(300)
-        emit(artists.filter { it.genreId == genreId })
+        emit(artists.filter { it.genreId == genreId }.toImmutableList())
     }
 
-    fun getAlbumsForArtist(artistId: String): Flow<List<Album>> = flow {
+    fun getAlbumsForArtist(artistId: String): Flow<ImmutableList<Album>> = flow {
         delay(300)
-        emit(albums.filter { it.artistId == artistId })
+        emit(albums.filter { it.artistId == artistId }.toImmutableList())
     }
 
-    fun getTracksForAlbum(albumId: String): Flow<List<Track>> = flow {
+    fun getTracksForAlbum(albumId: String): Flow<ImmutableList<Track>> = flow {
         delay(200)
-        emit(tracks[albumId].orEmpty())
+        emit(tracks[albumId]?.toImmutableList() ?: persistentListOf())
     }
 }
