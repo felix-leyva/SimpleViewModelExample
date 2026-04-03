@@ -3,12 +3,13 @@ package de.felixlf.simpleviewmodelexample.feature.musicdiscovery
 import de.felixlf.simpleviewmodelexample.domain.Album
 import de.felixlf.simpleviewmodelexample.domain.Artist
 import de.felixlf.simpleviewmodelexample.domain.Genre
-import de.felixlf.simpleviewmodelexample.domain.MusicRepository
+import de.felixlf.simpleviewmodelexample.domain.usecases.GetAlbumsForArtistUseCase
+import de.felixlf.simpleviewmodelexample.domain.usecases.GetArtistsForGenreUseCase
+import de.felixlf.simpleviewmodelexample.domain.usecases.GetGenresUseCase
+import de.felixlf.simpleviewmodelexample.domain.usecases.GetTracksForAlbumUseCase
 import de.felixlf.simpleviewmodelexample.uimodel.UIModel
 import de.felixlf.simpleviewmodelexample.uimodel.combine
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,10 +23,13 @@ import kotlinx.coroutines.flow.stateIn
 class MusicDiscoveryUIModel(
     override val scope: CoroutineScope,
     sharingStarted: SharingStarted,
-    private val repository: MusicRepository,
+    getGenresUseCase: GetGenresUseCase,
+    private val getArtistsForGenre: GetArtistsForGenreUseCase,
+    private val getAlbumsForArtist: GetAlbumsForArtistUseCase,
+    private val getTracksForAlbum: GetTracksForAlbumUseCase,
 ) : UIModel<MusicDiscoveryUIState, MusicDiscoveryCommand> {
 
-    private val genres: ImmutableList<Genre> = repository.getGenres().toImmutableList()
+    private val genres = getGenresUseCase()
 
     // --- Internal mutable state (user selections) ---
     private val selectedGenre = MutableStateFlow<Genre?>(null)
@@ -37,7 +41,7 @@ class MusicDiscoveryUIModel(
     // flatMapLatest #1: genre → artists
     private val artists = selectedGenre.flatMapLatest { genre ->
         when {
-            genre != null -> repository.getArtistsForGenre(genre.id)
+            genre != null -> getArtistsForGenre(genre.id)
             else -> flowOf(persistentListOf())
         }
     }
@@ -45,7 +49,7 @@ class MusicDiscoveryUIModel(
     // flatMapLatest #2: artist → albums
     private val albums = selectedArtist.flatMapLatest { artist ->
         when {
-            artist != null -> repository.getAlbumsForArtist(artist.id)
+            artist != null -> getAlbumsForArtist(artist.id)
             else -> flowOf(persistentListOf())
         }
     }
@@ -53,7 +57,7 @@ class MusicDiscoveryUIModel(
     // flatMapLatest #3: album → tracks
     private val tracks = selectedAlbum.flatMapLatest { album ->
         when {
-            album != null -> repository.getTracksForAlbum(album.id)
+            album != null -> getTracksForAlbum(album.id)
             else -> flowOf(persistentListOf())
         }
     }
