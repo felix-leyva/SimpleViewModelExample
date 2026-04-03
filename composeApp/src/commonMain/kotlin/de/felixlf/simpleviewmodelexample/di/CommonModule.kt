@@ -7,9 +7,7 @@ import de.felixlf.simpleviewmodelexample.domain.usecases.GetGenresUseCase
 import de.felixlf.simpleviewmodelexample.domain.usecases.GetTracksForAlbumUseCase
 import de.felixlf.simpleviewmodelexample.feature.musicdiscovery.MusicDiscoveryUIModel
 import de.felixlf.simpleviewmodelexample.feature.musicdiscovery.MusicDiscoveryViewModel
-import de.felixlf.simpleviewmodelexample.uimodel.UIModelScope
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -23,16 +21,6 @@ val commonModule = module {
     single<GetAlbumsForArtistUseCase> { GetAlbumsForArtistUseCase { get<MusicRepository>().getAlbumsForArtist(it) } }
     single<GetTracksForAlbumUseCase> { GetTracksForAlbumUseCase { get<MusicRepository>().getTracksForAlbum(it) } }
 
-    factory {
-        val uiModelScope = get<UIModelScope>()
-        MusicDiscoveryUIModel(
-            scope = CoroutineScope(uiModelScope.coroutineContext + SupervisorJob()),
-            sharingStarted = uiModelScope.sharingStarted,
-            getGenres = get(),
-            getArtistsForGenre = get(),
-            getAlbumsForArtist = get(),
-            getTracksForAlbum = get(),
-        )
-    }
+    factoryOf(::MusicDiscoveryUIModel)
     viewModelOf(::MusicDiscoveryViewModel)
 }

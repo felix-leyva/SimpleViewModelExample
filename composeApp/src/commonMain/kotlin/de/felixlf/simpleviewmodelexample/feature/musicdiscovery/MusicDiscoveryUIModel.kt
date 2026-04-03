@@ -19,14 +19,15 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 
+private val defaultSharing = SharingStarted.WhileSubscribed(5_000)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class MusicDiscoveryUIModel(
     override val scope: CoroutineScope,
-    sharingStarted: SharingStarted,
     getGenres: GetGenresUseCase,
-    private val getArtistsForGenre: GetArtistsForGenreUseCase,
-    private val getAlbumsForArtist: GetAlbumsForArtistUseCase,
-    private val getTracksForAlbum: GetTracksForAlbumUseCase,
+    getArtistsForGenre: GetArtistsForGenreUseCase,
+    getAlbumsForArtist: GetAlbumsForArtistUseCase,
+    getTracksForAlbum: GetTracksForAlbumUseCase,
 ) : UIModel<MusicDiscoveryUIState, MusicDiscoveryCommand> {
 
     private val genres = getGenres()
@@ -72,7 +73,7 @@ class MusicDiscoveryUIModel(
         selectedAlbum,
         tracks,
         ::MusicDiscoveryUIState
-    ).stateIn(scope, sharingStarted, MusicDiscoveryUIState.Default)
+    ).stateIn(scope, defaultSharing, MusicDiscoveryUIState.Default)
 
     // --- Commands: update selections, reset downstream when parent changes ---
     override fun sendCommand(command: MusicDiscoveryCommand) {

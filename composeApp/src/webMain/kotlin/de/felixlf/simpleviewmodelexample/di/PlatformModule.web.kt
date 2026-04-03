@@ -1,15 +1,10 @@
 package de.felixlf.simpleviewmodelexample.di
 
-import de.felixlf.simpleviewmodelexample.uimodel.UIModelScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.SupervisorJob
 import org.koin.dsl.module
 
 actual val platformModule = module {
-    single {
-        UIModelScope(
-            coroutineContext = Dispatchers.Main,
-            sharingStarted = SharingStarted.Eagerly,
-        )
-    }
+    factory { CoroutineScope(Dispatchers.Main + SupervisorJob()) }
 }
