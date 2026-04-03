@@ -19,8 +19,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 
-private val defaultSharing = SharingStarted.WhileSubscribed(5_000)
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class MusicDiscoveryUIModel(
     override val scope: CoroutineScope,
@@ -73,7 +71,7 @@ class MusicDiscoveryUIModel(
         selectedAlbum,
         tracks,
         ::MusicDiscoveryUIState
-    ).stateIn(scope, defaultSharing, MusicDiscoveryUIState.Default)
+    ).stateIn(scope, SharingStarted.WhileSubscribed(5_000), MusicDiscoveryUIState.Default)
 
     // --- Commands: update selections, reset downstream when parent changes ---
     override fun sendCommand(command: MusicDiscoveryCommand) {
