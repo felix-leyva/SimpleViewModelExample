@@ -7,4 +7,6 @@ plugins {
     alias(libs.plugins.composeMultiplatform) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
+    alias(libs.plugins.kobwebApplication) apply false
+    alias(libs.plugins.skie) apply false
 }

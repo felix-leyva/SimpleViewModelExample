@@ -12,6 +12,8 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        maven("https://us-central1-varabyte-repos.cloudfunctions.net/maven/kobweb")
+        maven("https://us-central1-varabyte-repos.cloudfunctions.net/maven/kobwebx")
     }
 }
 
@@ -25,6 +27,8 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven("https://us-central1-varabyte-repos.cloudfunctions.net/maven/kobweb")
+        maven("https://us-central1-varabyte-repos.cloudfunctions.net/maven/kobwebx")
     }
 }
 
@@ -34,4 +38,5 @@ plugins {
 
 include(":shared")
 include(":composeApp")
+include(":kobwebApp")
 include(":androidapp")
