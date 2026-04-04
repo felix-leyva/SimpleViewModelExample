@@ -1,4 +1,4 @@
-package kobwebApp.pages
+package SimpleViewModelExample.pages
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
