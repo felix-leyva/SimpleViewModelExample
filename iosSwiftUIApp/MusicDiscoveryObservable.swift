@@ -11,11 +11,12 @@ class MusicDiscoveryObservable {
     init() {
         let helper = KoinHelper()
         uiModel = helper.getMusicDiscoveryUIModel()
-        state = uiModel.uiState.value
+        state = uiModel.uiState.value as! MusicDiscoveryUIState
 
         // SKIE converts StateFlow to AsyncSequence — collect updates
         observationTask = Task { @MainActor [weak self] in
-            for await newState in self?.uiModel.uiState ?? AsyncStream { $0.finish() } {
+            guard let uiModel = self?.uiModel else { return }
+            for await newState in uiModel.uiState {
                 self?.state = newState
             }
         }
@@ -27,6 +28,5 @@ class MusicDiscoveryObservable {
 
     deinit {
         observationTask?.cancel()
-        uiModel.scope.cancel(cause: nil)
     }
 }
