@@ -1,76 +1,88 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM).
+# Your ViewModel Should Be 3 Lines Long
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+Companion project for the article series **"Your ViewModel Should Be 3 Lines Long"**
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+This project demonstrates a UIModel delegation pattern for Kotlin Multiplatform where all UI logic
+lives in a pure Kotlin class (`UIModel`) with zero AndroidX dependencies. The ViewModel becomes an
+optional 3-line lifecycle wrapper using Kotlin `by` delegation.
 
-### Build and Run Android Application
+## The pattern
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+```kotlin
+// The UIModel — pure Kotlin, no AndroidX, lives in commonMain
+class MusicDiscoveryUIModel(
+    override val scope: CoroutineScope,
+    // use cases injected here...
+) : UIModel<MusicDiscoveryUIState, MusicDiscoveryCommand> { ... }
 
-### Build and Run Desktop (JVM) Application
+// The ViewModel — 3 lines, optional, only needed on Android
+class MusicDiscoveryViewModel(
+    musicDiscoveryUIModel: MusicDiscoveryUIModel,
+) : ViewModel(musicDiscoveryUIModel.scope),
+    UIModel<MusicDiscoveryUIState, MusicDiscoveryCommand> by musicDiscoveryUIModel
+```
 
-To build and run the development version of the desktop app, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:run
-  ```
+## Project structure
 
-### Build and Run Web Application
+| Module           | Description                                                                                                                             |
+|------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| `:shared`        | Pure Kotlin module with `UIModel`, state, commands, use cases, and DI. No AndroidX, no Compose. Targets: Android, iOS, JVM, JS, WasmJS. |
+| `:composeApp`    | Compose Multiplatform app (Android, iOS, Desktop, Web). Adds the 3-line ViewModel wrapper and consumes the UIModel.                     |
+| `:kobwebApp`     | Kobweb (Compose HTML / Kotlin JS) app. Consumes the UIModel directly — no ViewModel needed.                                             |
+| `iosSwiftUIApp/` | Native SwiftUI app. Consumes the UIModel via SKIE (StateFlow → Swift AsyncSequence). No ViewModel.                                      |
 
-To build and run the development version of the web app, use the run configuration from the run widget
-in your IDE's toolbar or run it directly from the terminal:
-- for the Wasm target (faster, modern browsers):
-  - on macOS/Linux
-    ```shell
-    ./gradlew :composeApp:wasmJsBrowserDevelopmentRun
-    ```
-  - on Windows
-    ```shell
-    .\gradlew.bat :composeApp:wasmJsBrowserDevelopmentRun
-    ```
-- for the JS target (slower, supports older browsers):
-  - on macOS/Linux
-    ```shell
-    ./gradlew :composeApp:jsBrowserDevelopmentRun
-    ```
-  - on Windows
-    ```shell
-    .\gradlew.bat :composeApp:jsBrowserDevelopmentRun
-    ```
+## Platforms
 
-### Build and Run iOS Application
+The same `MusicDiscoveryUIModel` class runs on all platforms:
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+- **Android** — via Compose Multiplatform + 3-line ViewModel wrapper
+- **iOS (Compose)** — via Compose Multiplatform
+- **iOS (SwiftUI)** — via SKIE, native `@Observable` wrapper
+- **Desktop (JVM)** — via Compose Multiplatform
+- **Web (Wasm)** — via Compose Multiplatform
+- **Web (Kobweb)** — via Compose HTML, direct StateFlow collection
 
----
+## Build and run
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
+### Android / Desktop / Web (Compose Multiplatform)
 
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+```shell
+# Android
+./gradlew :composeApp:assembleDebug
+
+# Desktop
+./gradlew :composeApp:run
+
+# Web (Wasm)
+./gradlew :composeApp:wasmJsBrowserDevelopmentRun
+
+# Web (JS)
+./gradlew :composeApp:jsBrowserDevelopmentRun
+```
+
+### Kobweb
+
+```shell
+cd kobwebApp
+kobweb run
+```
+
+### iOS (Compose Multiplatform)
+
+Open the project in Android Studio / Fleet and use the iOS run configuration, or open `iosApp/` in
+Xcode.
+
+### iOS (SwiftUI)
+
+1. Build the shared framework: `./gradlew :shared:linkDebugFrameworkIosSimulatorArm64`
+2. Open `iosSwiftUIApp/MusicDiscoverySwiftUI/MusicDiscoverySwiftUI.xcodeproj` in Xcode
+3. Run on simulator
+
+## Key dependencies
+
+- Kotlin Multiplatform
+- Compose Multiplatform
+- Kobweb
+- SKIE (Touchlab) — Swift interop for StateFlow
+- Koin — Dependency injection
+- kotlinx.collections.immutable
