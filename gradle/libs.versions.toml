@@ -19,7 +19,7 @@ kotlinx-coroutines = "1.10.2"
 material3 = "1.10.0-alpha05"
 androidBuiltInKotlin = "9.1.0"
 kobweb = "0.24.0"
-skie = "0.10.1"
+skie = "0.10.11"
 material = "1.13.0"
 
 [libraries]
