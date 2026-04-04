@@ -1,0 +1,23 @@
+package de.felixlf.simpleviewmodelexample.di
+
+import de.felixlf.simpleviewmodelexample.domain.MusicRepository
+import de.felixlf.simpleviewmodelexample.domain.usecases.GetAlbumsForArtistUseCase
+import de.felixlf.simpleviewmodelexample.domain.usecases.GetArtistsForGenreUseCase
+import de.felixlf.simpleviewmodelexample.domain.usecases.GetGenresUseCase
+import de.felixlf.simpleviewmodelexample.domain.usecases.GetTracksForAlbumUseCase
+import de.felixlf.simpleviewmodelexample.feature.musicdiscovery.MusicDiscoveryUIModel
+import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.module
+
+val sharedModule = module {
+    singleOf(::MusicRepository)
+
+    // Use cases — fun interfaces backed by repository
+    single<GetGenresUseCase> { GetGenresUseCase { get<MusicRepository>().getGenres() } }
+    single<GetArtistsForGenreUseCase> { GetArtistsForGenreUseCase { get<MusicRepository>().getArtistsForGenre(it) } }
+    single<GetAlbumsForArtistUseCase> { GetAlbumsForArtistUseCase { get<MusicRepository>().getAlbumsForArtist(it) } }
+    single<GetTracksForAlbumUseCase> { GetTracksForAlbumUseCase { get<MusicRepository>().getTracksForAlbum(it) } }
+
+    factoryOf(::MusicDiscoveryUIModel)
+}
