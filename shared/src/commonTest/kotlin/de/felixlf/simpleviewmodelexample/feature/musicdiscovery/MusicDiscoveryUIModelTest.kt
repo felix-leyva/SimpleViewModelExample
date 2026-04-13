@@ -8,8 +8,11 @@ import de.felixlf.simpleviewmodelexample.domain.usecases.GetAlbumsForArtistUseCa
 import de.felixlf.simpleviewmodelexample.domain.usecases.GetArtistsForGenreUseCase
 import de.felixlf.simpleviewmodelexample.domain.usecases.GetGenresUseCase
 import de.felixlf.simpleviewmodelexample.domain.usecases.GetTracksForAlbumUseCase
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -46,31 +49,71 @@ private val lzIVTracks = persistentListOf(
     Track("2", "Stairway to Heaven", 482),
 )
 
-// --- Extension to create SUT with collector into mutableList ---
+// --- Reusable fakes ---
 
-@OptIn(ExperimentalCoroutinesApi::class)
-private fun TestScope.createSut(
-    getGenres: GetGenresUseCase = GetGenresUseCase { flowOf(testGenres) },
-    getArtistsForGenre: GetArtistsForGenreUseCase = GetArtistsForGenreUseCase { genreId ->
-        when (genreId) {
+private class FakeGetGenres : GetGenresUseCase {
+    val genres = MutableStateFlow<ImmutableList<Genre>>(testGenres)
+    override fun invoke(): Flow<ImmutableList<Genre>> = genres
+}
+
+private class FakeGetArtistsForGenre : GetArtistsForGenreUseCase {
+    val artists = MutableStateFlow<ImmutableList<Artist>>(persistentListOf())
+    var lastGenreId: String? = null
+    var callCount = 0
+
+    override fun invoke(genreId: String): Flow<ImmutableList<Artist>> {
+        lastGenreId = genreId
+        callCount++
+        return when (genreId) {
             "rock" -> flowOf(rockArtists)
             "jazz" -> flowOf(jazzArtists)
             else -> flowOf(persistentListOf())
         }
-    },
-    getAlbumsForArtist: GetAlbumsForArtistUseCase = GetAlbumsForArtistUseCase { artistId ->
-        when (artistId) {
+    }
+}
+
+private class FakeGetAlbumsForArtist : GetAlbumsForArtistUseCase {
+    var lastArtistId: String? = null
+    var callCount = 0
+
+    override fun invoke(artistId: String): Flow<ImmutableList<Album>> {
+        lastArtistId = artistId
+        callCount++
+        return when (artistId) {
             "led-zeppelin" -> flowOf(ledZeppelinAlbums)
             "miles-davis" -> flowOf(milesDavisAlbums)
             else -> flowOf(persistentListOf())
         }
-    },
-    getTracksForAlbum: GetTracksForAlbumUseCase = GetTracksForAlbumUseCase { albumId ->
-        when (albumId) {
+    }
+}
+
+private class FakeGetTracksForAlbum : GetTracksForAlbumUseCase {
+    var lastAlbumId: String? = null
+    var callCount = 0
+
+    override fun invoke(albumId: String): Flow<ImmutableList<Track>> {
+        lastAlbumId = albumId
+        callCount++
+        return when (albumId) {
             "lz-iv" -> flowOf(lzIVTracks)
             else -> flowOf(persistentListOf())
         }
-    },
+    }
+}
+
+// --- Extension to create SUT with collector into mutableList ---
+
+private val fakeGenres = FakeGetGenres()
+private val fakeArtists = FakeGetArtistsForGenre()
+private val fakeAlbums = FakeGetAlbumsForArtist()
+private val fakeTracks = FakeGetTracksForAlbum()
+
+@OptIn(ExperimentalCoroutinesApi::class)
+private fun TestScope.createSut(
+    getGenres: GetGenresUseCase = fakeGenres,
+    getArtistsForGenre: GetArtistsForGenreUseCase = fakeArtists,
+    getAlbumsForArtist: GetAlbumsForArtistUseCase = fakeAlbums,
+    getTracksForAlbum: GetTracksForAlbumUseCase = fakeTracks,
 ): Pair<MusicDiscoveryUIModel, MutableList<MusicDiscoveryUIState>> {
     val sut = MusicDiscoveryUIModel(
         scope = backgroundScope,
